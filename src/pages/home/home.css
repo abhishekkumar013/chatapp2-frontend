@@ -1,0 +1,30 @@
+.home {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  background: url("https://unsplash.com/photos/a-close-up-of-a-speech-bubble-on-a-wall-ZyX8UxLAyuE");
+}
+@media screen and (max-width: 48px) {
+  .home {
+    align-items: center;
+    flex-direction: column;
+    height: 100%;
+  }
+}
+
+.login {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.login-card {
+  width: 40%;
+  height: fit-content;
+  box-sizing: border-box;
+  margin-top: 10%;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.1);
+  color: black;
+  box-shadow: 0 0 10px #a18c8c, 0 0 20px #ffff;
+}
