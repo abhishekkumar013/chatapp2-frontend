@@ -3,6 +3,9 @@ import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "../componets/AuthLayout";
 import { SocialLoginButtons } from "../componets/SocialLoginButton";
 import ProfilePictureSelector from "../componets/ProfilePictureSelector";
+import axios from "axios";
+import { toast } from "react-toastify";
+
 export const SignUp = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
@@ -11,15 +14,28 @@ export const SignUp = () => {
   const [showPictureSelector, setShowPictureSelector] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add signup logic here
-    console.log("Signup attempt:", {
-      name,
-      phoneNumber,
-      password,
-      profilePicture,
-    });
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/users/signup",
+        {
+          name,
+          mobileNumber: phoneNumber,
+          password,
+          profilePic: profilePicture,
+        }
+      );
+      console.log("res: ->", response);
+      if (response.data.success) {
+        toast.success(response.data.message);
+        navigate("/signin");
+      } else {
+        toast.info(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
   };
 
   const handleProfilePictureSelect = (avatarUrl) => {

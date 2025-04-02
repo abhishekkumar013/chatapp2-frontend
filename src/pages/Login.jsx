@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AuthLayout from "../componets/AuthLayout";
 import { SocialLoginButtons } from "../componets/SocialLoginButton";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -9,10 +11,33 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add login logic here
-    console.log("Login attempt:", { phoneNumber, password, rememberMe });
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/users/signin",
+        {
+          mobileNumber: phoneNumber,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        localStorage.setItem("token", response.data.token);
+
+        navigate("/dashboard", { replace: true });
+      } else {
+        toast.info(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
   };
 
   return (

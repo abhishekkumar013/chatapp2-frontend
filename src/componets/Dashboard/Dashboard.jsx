@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import LogoutIcon from "@mui/icons-material/Logout";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+// import { FtechContacts, FtechFilterUser } from "../../utils/data";
 
 const ChatDashboard = () => {
   const [message, setMessage] = useState("");
@@ -7,28 +11,57 @@ const ChatDashboard = () => {
 
   const [queryParams, setQueryParams] = useState("");
   const [searchData, setSearchData] = useState([]);
+  const [contacts, setContact] = useState([]);
+
+  const navigate = useNavigate();
+
+  const FtechContacts = async () => {
+    const token = localStorage.getItem("token");
+
+    const response = await axios.get("http://localhost:8080/api/v1/users/all", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      withCredentials: true,
+    });
+    console.log(response);
+    if (response.data.success) {
+      setContact(response.data.users);
+    } else {
+      toast.error(response.data.message);
+    }
+  };
+  const FtechFilterUser = async () => {
+    const token = localStorage.getItem("token");
+
+    const response = await axios.get(
+      `http://localhost:8080/api/v1/users/search?filter=${queryParams}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      }
+    );
+    console.log(response);
+    if (response.data.success) {
+      setContact(response.data.users);
+    } else {
+      toast.error(response.data.message);
+    }
+  };
+  useEffect(() => {
+    FtechContacts();
+  }, []);
 
   useEffect(() => {
     // call search api
     if (queryParams.trim() === "") {
-      setSearchData(contacts);
+      FtechContacts();
     } else {
-      const filterData = contacts.filter(
-        (c) =>
-          c.name.toLowerCase().includes(queryParams.toLowerCase()) ||
-          c.username.toLowerCase().includes(queryParams.toLowerCase())
-      );
-      setSearchData(filterData);
+      FtechFilterUser();
     }
   }, [queryParams]);
-
-  const contacts = [
-    { id: 1, name: "Kohli", username: "xxxxx1212x", avatar: "👨" },
-    { id: 2, name: "Danish", username: "xxxxxxx518", avatar: "👨" },
-    { id: 3, name: "Raju", username: "xxxxxxx321", avatar: "👨" },
-    { id: 4, name: "shubham", username: "xxxxxxx348", avatar: "👨" },
-    { id: 5, name: "Ayush", username: "xxxxxxx999", avatar: "👨" },
-  ];
 
   const messages = [
     {
@@ -53,6 +86,33 @@ const ChatDashboard = () => {
       setMessage("");
     }
   };
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      console.log(token);
+
+      const response = await axios.post(
+        "http://localhost:8080/api/v1/users/logout",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        }
+      );
+      if (response.data.success) {
+        toast.success("Logged out successfully");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/signin");
+      } else {
+        toast.info(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-pink-500 to-pink-400 p-4">
@@ -61,7 +121,10 @@ const ChatDashboard = () => {
         <div className="w-1/4 bg-gray-50 border-r border-gray-200 flex flex-col">
           <div className="p-4  flex justify-between items-center">
             <h1 className="text-xl font-bold">Chats</h1>
-            <button className="p-2 rounded cursor-pointer">
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded cursor-pointer"
+            >
               <LogoutIcon />
             </button>
           </div>
@@ -75,28 +138,28 @@ const ChatDashboard = () => {
               placeholder="Search"
               className="w-full bg-gray-100 rounded-l-full px-4 py-2 focus:outline-none"
             />
-            <button className="bg-gray-100 rounded-r-full px-3 py-2">
+            <div className="bg-gray-100 rounded-r-full px-3 py-2">
               <span className="text-gray-600">🔍</span>
-            </button>
+            </div>
           </div>
 
           {/* Contact list */}
           <div className="overflow-y-auto flex-1">
-            {queryParams.trim() !== "" && searchData.length === 0 ? (
+            {queryParams.trim() !== "" && contacts.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
                 No contacts found matching {queryParams}
               </div>
             ) : (
-              (queryParams === "" ? contacts : searchData).map((contact) => (
+              contacts.map((contact) => (
                 <div
-                  key={contact.id}
+                  key={contact._id}
                   className={`flex items-center p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100 ${
                     activeChat === contact.name ? "bg-gray-100" : ""
                   }`}
                   onClick={() => setActiveChat(contact.name)}
                 >
                   <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white mr-3">
-                    {contact.avatar}
+                    <img src={contact.profilePic} />
                   </div>
                   <div>
                     <h3 className="font-semibold">{contact.name}</h3>
